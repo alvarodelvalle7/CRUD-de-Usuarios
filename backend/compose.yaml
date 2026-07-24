@@ -1,0 +1,59 @@
+# Este archivo une los contenedores del proyecto (base de datos + backend) para
+# poder levantarlos todos juntos con un solo comando: docker compose up
+# Compose crea automáticamente una red privada y mete aquí dentro a todos los
+# "services", para que puedan encontrarse entre sí por su nombre (db, backend),
+# sin tener que crear la red a mano como hacíamos antes con "docker network create".
+
+services:
+
+  # ===============================
+  # SERVICIO: BASE DE DATOS (Postgres)
+  # ===============================
+  db:
+    # Imagen oficial de Postgres, versión 17
+    image: postgres:17
+    # Si el contenedor se cae por lo que sea, Docker intenta reiniciarlo solo
+    restart: always
+    # Variables que necesita la imagen oficial de Postgres para crear el
+    # usuario, la contraseña y la base de datos la primera vez que arranca
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: caialvaro7
+      POSTGRES_DB: crud_user_db
+    # Guarda los datos fuera del contenedor, en el volumen "pgdata".
+    # Así, aunque borremos el contenedor, los datos no se pierden
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Conecta el puerto 5432 de mi ordenador con el 5432 del contenedor
+    # (para poder conectarme desde fuera con herramientas como DBeaver)
+    ports:
+      - "5432:5432"
+
+  # ===============================
+  # SERVICIO: BACKEND (FastAPI)
+  # ===============================
+  backend:
+    # En vez de usar una imagen ya hecha, la construye desde el Dockerfile
+    # que hay en esta misma carpeta (el punto "." significa "aquí")
+    build: .
+    # Arranca "db" antes que "backend".
+    # Ojo: solo controla el ORDEN de arranque, no espera a que Postgres
+    # esté completamente listo para aceptar conexiones
+    depends_on:
+      - db
+    # Carga APP_NAME, DEBUG y ALLOWED_ORIGINS directamente desde mi archivo .env
+    env_file:
+      - .env
+    # Sobreescribe SOLO la variable DATABASE_URL del .env, porque dentro de
+    # Docker la base de datos ya no se llama "localhost", se llama "db"
+    # (el nombre del servicio de arriba, que Compose resuelve solo)
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:caialvaro7@db:5432/crud_user_db
+    # Conecta el puerto 8000 de mi ordenador con el 8000 del contenedor
+    ports:
+      - "8000:8000"
+
+# Declaramos el volumen con nombre para que Docker lo gestione y los datos
+# de Postgres sobrevivan a un "docker compose down"
+volumes:
+  pgdata:

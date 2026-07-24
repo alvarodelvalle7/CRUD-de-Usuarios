@@ -1,0 +1,15 @@
+# .venv se incluye porque pesa mucho
+.venv/
+# No hace falta copiarlas ya que son versiones compiladas del código
+__pycache__/
+**/__pycache__/
+# No aporta nada a la imagen de producción
+.pytest_cache/
+# Variables reales del proyecto con información confidencial
+.env
+# Por si algún archivo .pyc se ha quedado fuera de una carpeta
+*.pyc
+# Excluimos los tests
+tests/
+# Excluimos los archivos markdown
+*.md

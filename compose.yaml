@@ -1,0 +1,46 @@
+# compose.yaml de la raíz: levanta los 3 servicios del proyecto juntos
+# (base de datos + backend + frontend), cada uno construido desde su propia carpeta.
+
+services:
+
+  # ===============================
+  # SERVICIO: BASE DE DATOS (Postgres)
+  # ===============================
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: caialvaro7
+      POSTGRES_DB: crud_user_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # ===============================
+  # SERVICIO: BACKEND (FastAPI)
+  # ===============================
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:caialvaro7@db:5432/crud_user_db
+    ports:
+      - "8001:8000"
+
+  # ===============================
+  # SERVICIO: FRONTEND (Angular + Nginx)
+  # ===============================
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "4300:80"
+
+volumes:
+  pgdata:

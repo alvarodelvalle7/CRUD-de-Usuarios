@@ -1,0 +1,9 @@
+<button
+  [type]="type()"
+  [disabled]="disabled()"
+  [class]="'px-4 py-2 rounded font-medium cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed ' + variantClasses"
+  (click)="appClick.emit()"
+>
+  <ng-content />
+</button>
+
